@@ -1,0 +1,27 @@
+{
+  "topic_name": "轻量文献动态汇总 Agent 示例主题",
+  "queries": [
+    "literature review agent scholarly search",
+    "large language model research assistant literature review",
+    "Zotero AI literature review"
+  ],
+  "exclude_terms": [
+    "patent",
+    "book review"
+  ],
+  "from_days": 30,
+  "per_query_limit": 25,
+  "max_items_in_report": 12,
+  "openalex_mailto": "",
+  "unpaywall_email": "",
+  "llm": {
+    "enabled": false,
+    "model": "gpt-4o-mini",
+    "max_reviews": 8,
+    "temperature": 0.2
+  },
+  "email": {
+    "subject": "{topic_name} 每周文献动态 - {date}"
+  },
+  "output_language": "zh"
+}

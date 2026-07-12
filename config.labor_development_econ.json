@@ -1,0 +1,303 @@
+{
+  "topic_name": "人力资本、劳动经济学、发展经济学与公共经济学",
+  "modules": [
+    {
+      "name": "人口老龄化、人口经济与迁移",
+      "description": "关注人口老龄化、生育、迁移、汇款、家庭结构变化及其对劳动供给、增长和发展结果的影响。",
+      "queries": [
+        "population aging labor supply economics",
+        "fertility labor market population economics",
+        "migration remittances labor market development economics"
+      ],
+      "priority_terms": [
+        "population aging",
+        "ageing",
+        "fertility",
+        "migration",
+        "remittances",
+        "demographic",
+        "labor supply",
+        "labour supply",
+        "dependency ratio",
+        "family structure"
+      ],
+      "max_items": 6
+    },
+    {
+      "name": "劳动力市场、教育回报与收入分配",
+      "description": "关注教育回报、工资、就业、失业、技能形成、劳动力市场摩擦、收入不平等和代际流动。",
+      "queries": [
+        "returns to education labor market economics",
+        "education wage returns employment labor economics",
+        "skill formation wage inequality labor economics"
+      ],
+      "priority_terms": [
+        "returns to education",
+        "wage",
+        "employment",
+        "unemployment",
+        "labor market",
+        "labour market",
+        "skill formation",
+        "income inequality",
+        "intergenerational",
+        "mobility"
+      ],
+      "max_items": 6
+    },
+    {
+      "name": "投资于人、人的发展与发展经济学",
+      "description": "关注教育投资、儿童早期发展、健康与教育、人力资本积累、贫困、发展政策和长期发展结果。",
+      "queries": [
+        "human capital education investment development economics",
+        "early childhood development education investment economics",
+        "education policy human capital developing countries"
+      ],
+      "priority_terms": [
+        "human capital",
+        "human development",
+        "education investment",
+        "early childhood",
+        "schooling",
+        "health",
+        "poverty",
+        "inequality",
+        "developing countries",
+        "investment in children"
+      ],
+      "max_items": 6
+    },
+    {
+      "name": "公共经济学、财政政策与社会保障",
+      "description": "关注税收、转移支付、社会保障、公共服务、公共财政、地方政府、政策评估及其对劳动供给、收入分配和人力资本的影响。",
+      "queries": [
+        "public economics labor supply taxation",
+        "tax policy labor market inequality economics",
+        "social insurance labor market public economics"
+      ],
+      "priority_terms": [
+        "public economics",
+        "public finance",
+        "tax policy",
+        "taxation",
+        "social insurance",
+        "social security",
+        "government transfers",
+        "welfare policy",
+        "public services",
+        "fiscal policy"
+      ],
+      "max_items": 6
+    }
+  ],
+  "openalex_extra_filter": "concepts.id:C162324750",
+  "quality_sources": [
+    {
+      "name": "American Economic Review",
+      "aliases": ["AER"],
+      "weight": 12
+    },
+    {
+      "name": "Quarterly Journal of Economics",
+      "aliases": ["QJE"],
+      "weight": 12
+    },
+    {
+      "name": "Journal of Political Economy",
+      "aliases": ["JPE"],
+      "weight": 12
+    },
+    {
+      "name": "Econometrica",
+      "aliases": [],
+      "weight": 12
+    },
+    {
+      "name": "Review of Economic Studies",
+      "aliases": ["REStud", "The Review of Economic Studies"],
+      "weight": 12
+    },
+    {
+      "name": "NBER Working Paper",
+      "aliases": ["National Bureau of Economic Research", "NBER"],
+      "weight": 10
+    },
+    {
+      "name": "IZA Discussion Paper",
+      "aliases": ["IZA Institute of Labor Economics", "IZA"],
+      "weight": 9
+    },
+    {
+      "name": "World Bank Policy Research Working Paper",
+      "aliases": ["Policy Research Working Paper", "World Bank"],
+      "weight": 9
+    },
+    {
+      "name": "CESifo Working Paper",
+      "aliases": ["CESifo"],
+      "weight": 8
+    },
+    {
+      "name": "CEPR Discussion Paper",
+      "aliases": ["CEPR"],
+      "weight": 8
+    },
+    {
+      "name": "Journal of Development Economics",
+      "aliases": [],
+      "weight": 8
+    },
+    {
+      "name": "Journal of Public Economics",
+      "aliases": ["JPubE"],
+      "weight": 8
+    },
+    {
+      "name": "AEJ: Applied Economics",
+      "aliases": ["American Economic Journal: Applied Economics"],
+      "weight": 8
+    },
+    {
+      "name": "AEJ: Economic Policy",
+      "aliases": ["American Economic Journal: Economic Policy"],
+      "weight": 8
+    },
+    {
+      "name": "Labour Economics",
+      "aliases": ["Labor Economics"],
+      "weight": 8
+    },
+    {
+      "name": "Journal of Population Economics",
+      "aliases": [],
+      "weight": 8
+    },
+    {
+      "name": "World Development",
+      "aliases": [],
+      "weight": 8
+    },
+    {
+      "name": "China Economic Review",
+      "aliases": [],
+      "weight": 7
+    },
+    {
+      "name": "Economic Development and Cultural Change",
+      "aliases": [],
+      "weight": 7
+    },
+    {
+      "name": "Journal of Human Resources",
+      "aliases": [],
+      "weight": 7
+    },
+    {
+      "name": "Journal of Labor Economics",
+      "aliases": ["Journal of Labour Economics"],
+      "weight": 7
+    },
+    {
+      "name": "Review of Economics and Statistics",
+      "aliases": ["The Review of Economics and Statistics", "REStat"],
+      "weight": 7
+    }
+  ],
+  "independent_sources": [
+    {
+      "type": "nber_rss",
+      "name": "NBER Working Paper",
+      "url": "https://www.nber.org/rss/new.xml",
+      "limit": 25
+    },
+    {
+      "type": "repec_series",
+      "name": "IZA Discussion Paper",
+      "url": "https://ideas.repec.org/s/iza/izadps.html",
+      "limit": 25,
+      "fetch_details": true,
+      "max_detail_fetch": 12
+    },
+    {
+      "type": "repec_series",
+      "name": "World Bank Policy Research Working Paper",
+      "url": "https://ideas.repec.org/s/wbk/wbrwps.html",
+      "limit": 25,
+      "fetch_details": true,
+      "max_detail_fetch": 12
+    }
+  ],
+  "priority_terms": [
+    "labor market",
+    "labour market",
+    "human capital",
+    "returns to education",
+    "schooling",
+    "wage",
+    "employment",
+    "unemployment",
+    "fertility",
+    "migration",
+    "remittances",
+    "demographic",
+    "developing countries",
+    "poverty",
+    "inequality",
+    "intergenerational",
+    "early childhood",
+    "skill formation",
+    "education policy",
+    "labor supply",
+    "human development",
+    "public economics",
+    "public finance",
+    "tax policy",
+    "social insurance",
+    "government transfers",
+    "fiscal policy"
+  ],
+  "penalty_terms": [
+    "pedagogical",
+    "classroom",
+    "curriculum",
+    "student satisfaction",
+    "spiritual",
+    "artificial intelligence has become",
+    "sustainable economic development opportunities and challenges",
+    "clinical",
+    "nutrition",
+    "preconception",
+    "surgery",
+    "oncology"
+  ],
+  "exclude_terms": [
+    "clinical trial",
+    "medical education",
+    "nursing education",
+    "veterinary",
+    "molecular",
+    "cellular",
+    "genome",
+    "protein",
+    "surgery",
+    "cancer",
+    "neoplasm"
+  ],
+  "from_days": 30,
+  "per_query_limit": 15,
+  "openalex_timeout": 12,
+  "max_items_in_report": 6,
+  "minimum_relevance_score": 11,
+  "openalex_mailto": "",
+  "unpaywall_email": "",
+  "llm": {
+    "enabled": true,
+    "model": "gpt-4o-mini",
+    "max_reviews": 12,
+    "temperature": 0.2
+  },
+  "email": {
+    "subject": "人力资本/劳动/发展/公共经济学每周文献动态 - {date}"
+  },
+  "output_language": "zh"
+}

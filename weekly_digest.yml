@@ -1,0 +1,40 @@
+name: Weekly Literature Digest
+
+on:
+  schedule:
+    # Every Monday at 09:10 China Standard Time.
+    - cron: "10 9 * * 1"
+      timezone: Asia/Shanghai
+  workflow_dispatch:
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+      SMTP_FROM: ${{ secrets.SMTP_FROM }}
+      SMTP_USE_TLS: ${{ secrets.SMTP_USE_TLS }}
+      SMTP_USE_SSL: ${{ secrets.SMTP_USE_SSL }}
+      DIGEST_EMAIL_TO: ${{ secrets.DIGEST_EMAIL_TO }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Generate digest
+        run: python literature_digest_agent.py --config config.labor_development_econ.json --output-dir outputs
+      - name: Send digest email
+        if: ${{ env.SMTP_HOST != '' && env.DIGEST_EMAIL_TO != '' }}
+        run: python literature_digest_agent.py --config config.labor_development_econ.json --email-report "outputs/digest_$(date +%F).md" --send-email
+      - name: Upload digest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-literature-digest
+          path: outputs/
