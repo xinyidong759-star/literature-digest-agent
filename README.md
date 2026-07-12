@@ -50,6 +50,50 @@ python3 literature_digest_agent.py --config config.labor_development_econ.json -
 python3 literature_digest_agent.py --config config.labor_development_econ.json --output-dir outputs_labor_dev_econ --send-email
 ```
 
+## 多人订阅
+
+如果希望多人使用同一个 workflow，可以复制示例文件：
+
+```bash
+cp subscribers.example.json subscribers.json
+```
+
+然后编辑 `subscribers.json`：
+
+```json
+[
+  {
+    "name": "Dong Xinyi",
+    "email": "dongxinyi@muc.edu.cn",
+    "config": "config.labor_development_econ.json",
+    "enabled": true
+  },
+  {
+    "name": "Another Reader",
+    "emails": ["reader1@example.com", "reader2@example.com"],
+    "config": "config.labor_development_econ.json",
+    "enabled": true
+  }
+]
+```
+
+字段说明：
+
+- `name`：订阅者名称，用于日志和输出目录。
+- `email`：单个收件邮箱。
+- `emails`：多个收件邮箱；和 `email` 二选一。
+- `config`：该订阅者使用的领域配置文件。
+- `output_dir`：可选；不填时按配置文件名自动写入 `outputs/<config-name>/`。多个订阅者使用同一配置时只生成一次报告，再分别发送。
+- `enabled`：设为 `false` 可临时停用。
+
+本地运行多人模式：
+
+```bash
+python3 literature_digest_agent.py --subscribers subscribers.json --output-dir outputs --send-email
+```
+
+GitHub Actions 中，如果仓库根目录存在 `subscribers.json`，workflow 会自动进入多人订阅模式；如果不存在，则沿用单人模式和 `DIGEST_EMAIL_TO`。
+
 需要的环境变量：
 
 - `SMTP_HOST`：SMTP 服务器，例如 `smtp.gmail.com` 或 `smtp.office365.com`
@@ -91,15 +135,15 @@ python3 literature_digest_agent.py --config config.labor_development_econ.json -
 - 下载文献：发现合法 OA PDF 链接；World Bank/IZA 可通过 RePEc 详情页解析 PDF 链接
 - Review：可选调用 OpenAI API，为入选文献生成中文结构化小结
 - 周报：Markdown 草稿 + 简单 HTML 邮件正文
-- 定时：GitHub Actions 每周一北京时间 08:00 自动运行
+- 定时：GitHub Actions 每周一北京时间 09:10 自动运行
 
 ## GitHub Actions 定时邮件
 
 仓库内置 `.github/workflows/weekly_digest.yml`。它会：
 
-1. 每周一北京时间 08:00 自动运行，也支持手动 `workflow_dispatch`。
-2. 使用 `config.labor_development_econ.json` 检索并生成报告。
-3. 如果配置了 SMTP secrets，就发送邮件。
+1. 每周一北京时间 09:10 自动运行，也支持手动 `workflow_dispatch`。
+2. 如果存在 `subscribers.json`，按订阅者分别检索并发送；否则使用 `config.labor_development_econ.json` 生成单人报告。
+3. 如果配置了 SMTP secrets，就发送邮件；否则只生成 artifact。
 4. 无论是否发邮件，都会把 `outputs/` 上传为 workflow artifact。
 
 在 GitHub 仓库的 `Settings -> Secrets and variables -> Actions` 中添加这些 secrets：

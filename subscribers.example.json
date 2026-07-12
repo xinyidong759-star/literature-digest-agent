@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Dong Xinyi",
+    "email": "dongxinyi@muc.edu.cn",
+    "config": "config.labor_development_econ.json",
+    "enabled": true
+  },
+  {
+    "name": "Example Public Econ Reader",
+    "emails": [
+      "reader1@example.com",
+      "reader2@example.com"
+    ],
+    "config": "config.labor_development_econ.json",
+    "enabled": false
+  }
+]

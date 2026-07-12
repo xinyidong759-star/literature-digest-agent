@@ -842,9 +842,9 @@ def split_recipients(value):
     return [item.strip() for item in re.split(r"[,;]", value or "") if item.strip()]
 
 
-def send_digest_email(config, report_path):
+def send_digest_email(config, report_path, recipients_override=None):
     smtp_host = os.environ.get("SMTP_HOST")
-    recipients = split_recipients(os.environ.get("DIGEST_EMAIL_TO") or os.environ.get("SMTP_TO"))
+    recipients = recipients_override or split_recipients(os.environ.get("DIGEST_EMAIL_TO") or os.environ.get("SMTP_TO"))
     if not smtp_host or not recipients:
         raise RuntimeError("SMTP_HOST and DIGEST_EMAIL_TO must be set before sending email.")
 
@@ -889,6 +889,75 @@ def send_digest_email(config, report_path):
             if smtp_username or smtp_password:
                 smtp.login(smtp_username, smtp_password)
             smtp.send_message(message)
+
+
+def safe_slug(text, fallback="subscriber"):
+    text = (text or "").strip().lower()
+    text = re.sub(r"[^a-z0-9\u4e00-\u9fff]+", "-", text)
+    text = text.strip("-")
+    return text or fallback
+
+
+def subscriber_recipients(subscriber):
+    if "emails" in subscriber:
+        recipients = []
+        for item in subscriber.get("emails") or []:
+            recipients.extend(split_recipients(item))
+        return recipients
+    return split_recipients(subscriber.get("email", ""))
+
+
+def load_subscribers(path):
+    data = load_config(path)
+    if isinstance(data, dict):
+        subscribers = data.get("subscribers", [])
+    else:
+        subscribers = data
+    if not isinstance(subscribers, list):
+        raise RuntimeError("Subscribers file must be a list, or an object with a 'subscribers' list.")
+    return [item for item in subscribers if item.get("enabled", True)]
+
+
+def run_subscribers(subscribers_path, default_config_path, default_output_dir, send_email=False, dry_run_email=False):
+    subscribers = load_subscribers(subscribers_path)
+    if not subscribers:
+        print(f"No enabled subscribers in {subscribers_path}")
+        return
+
+    report_cache = {}
+    for index, subscriber in enumerate(subscribers, 1):
+        name = subscriber.get("name") or f"subscriber-{index}"
+        recipients = subscriber_recipients(subscriber)
+        if not recipients:
+            print(f"Skipping {name}: no email recipients", file=sys.stderr)
+            continue
+
+        config_path = Path(subscriber.get("config") or default_config_path)
+        config = load_config(config_path)
+        default_subscriber_output = Path(default_output_dir) / safe_slug(config_path.stem, f"subscriber-{index}")
+        output_dir = Path(subscriber.get("output_dir") or default_subscriber_output)
+        cache_key = (str(config_path.resolve()), str(output_dir.resolve()))
+
+        if cache_key in report_cache:
+            report_path, json_path, count = report_cache[cache_key]
+        else:
+            print(f"Running digest for {name}: config={config_path}, output_dir={output_dir}")
+            report_path, json_path, count = run(config, output_dir)
+            report_cache[cache_key] = (report_path, json_path, count)
+
+        print(f"Subscriber: {name}")
+        print(f"Recipients: {', '.join(recipients)}")
+        print(f"Found {count} candidate papers")
+        print(f"Report: {report_path}")
+        print(f"Data: {json_path}")
+
+        if dry_run_email:
+            smtp_host = os.environ.get("SMTP_HOST")
+            sender = os.environ.get("SMTP_FROM") or os.environ.get("SMTP_USERNAME", "")
+            print(f"Email dry run for {name}: SMTP_HOST={'set' if smtp_host else 'missing'}, sender={'set' if sender else 'missing'}, recipients={len(recipients)}")
+        if send_email:
+            send_digest_email(config, report_path, recipients_override=recipients)
+            print(f"Email sent to {name}")
 
 
 def run(config, output_dir):
@@ -998,10 +1067,21 @@ def main():
     parser = argparse.ArgumentParser(description="Generate a weekly literature digest from open scholarly APIs.")
     parser.add_argument("--config", default="config.example.json", help="Path to JSON config file.")
     parser.add_argument("--output-dir", default="outputs", help="Directory for report outputs.")
+    parser.add_argument("--subscribers", help="Path to a subscribers JSON file for multi-recipient/multi-config runs.")
     parser.add_argument("--send-email", action="store_true", help="Send the generated digest via SMTP.")
     parser.add_argument("--email-report", help="Send an existing report file instead of generating a new one.")
     parser.add_argument("--dry-run-email", action="store_true", help="Validate email settings without sending.")
     args = parser.parse_args()
+
+    if args.subscribers:
+        run_subscribers(
+            subscribers_path=args.subscribers,
+            default_config_path=args.config,
+            default_output_dir=args.output_dir,
+            send_email=args.send_email,
+            dry_run_email=args.dry_run_email,
+        )
+        return
 
     config = load_config(args.config)
     if args.email_report:
