@@ -5,7 +5,7 @@
 1. 根据配置中的领域关键词，从 OpenAlex 和独立高质量来源检索近期文献。
 2. 解析标题、摘要、作者、期刊、日期、DOI、开放获取链接。
 3. 去重并做一个简单相关性排序。
-4. 可选调用 OpenAI API 生成结构化中文文献 review。
+4. 可选调用 DeepSeek API 生成结构化中文文献 review。
 5. 生成 Markdown 周报，并可通过 SMTP 定时发送邮件。
 
 第一版故意不依赖 Google Scholar 抓取，因为 Google Scholar 没有官方公开 API，自动化不稳定也有合规风险。
@@ -33,12 +33,12 @@ python3 literature_digest_agent.py --config config.example.json
 python3 literature_digest_agent.py --config config.labor_development_econ.json --output-dir outputs_labor_dev_econ
 ```
 
-如需生成中文 review，设置 `OPENAI_API_KEY` 环境变量，并在配置文件里保持：
+如需生成中文 review，设置 `DEEPSEEK_API_KEY` 环境变量，并在配置文件里保持：
 
 ```json
 "llm": {
   "enabled": true,
-  "model": "gpt-4o-mini",
+  "model": "deepseek-flash",
   "required": true,
   "max_reviews": 0,
   "temperature": 0.2
@@ -134,7 +134,7 @@ python3 literature_digest_agent.py --config config.labor_development_econ.json -
 - 独立高质量来源：NBER RSS、IZA Discussion Papers via RePEc、World Bank Policy Research Working Papers via RePEc
 - 查看文献：标题、摘要、作者、期刊、DOI、URL、开放获取链接
 - 下载文献：发现合法 OA PDF 链接；World Bank/IZA 可通过 RePEc 详情页解析 PDF 链接
-- Review：可选调用 OpenAI API，为入选文献生成中文结构化小结
+- Review：可选调用 DeepSeek API，为入选文献生成中文结构化小结
 - 周报：Markdown 草稿 + 简单 HTML 邮件正文
 - 定时：GitHub Actions 每周一北京时间 09:10 自动运行
 
@@ -149,7 +149,7 @@ python3 literature_digest_agent.py --config config.labor_development_econ.json -
 
 在 GitHub 仓库的 `Settings -> Secrets and variables -> Actions` 中添加这些 secrets：
 
-- `OPENAI_API_KEY`：内置劳动/发展经济学配置必填；缺失会停止运行，避免发送没有中文内容的邮件。其他配置仅当 `llm.required=false` 时允许跳过。
+- `DEEPSEEK_API_KEY`：内置劳动/发展经济学配置必填；缺失会停止运行，避免发送没有中文内容的邮件。其他配置仅当 `llm.required=false` 时允许跳过。
 - `SMTP_HOST`
 - `SMTP_PORT`
 - `SMTP_USERNAME`
@@ -161,7 +161,7 @@ python3 literature_digest_agent.py --config config.labor_development_econ.json -
 
 可选 variable：
 
-- `OPENAI_MODEL`：覆盖配置文件中的模型名
+- `DEEPSEEK_MODEL`：覆盖配置文件中的模型名
 
 ## 后续可继续接入的能力
 
@@ -181,7 +181,7 @@ python3 literature_digest_agent.py --config config.labor_development_econ.json -
 ## 中文摘要、总结与评论的上线步骤
 
 1. 将更新后的 `literature_digest_agent.py`、`config.labor_development_econ.json`、测试文件和 workflow 上传到 GitHub 仓库。
-2. 在仓库 Settings → Secrets and variables → Actions 中添加 Repository secret `OPENAI_API_KEY`。本地 Windows 环境变量不会自动同步到 GitHub；不要将密钥写入配置或代码。
+2. 在仓库 Settings → Secrets and variables → Actions 中添加 Repository secret `DEEPSEEK_API_KEY`。本地 Windows 环境变量不会自动同步到 GitHub；不要将密钥写入配置或代码。
 3. 保持经济学配置 `llm.enabled=true`、`llm.required=true`、`llm.max_reviews=0`。这里 0 表示覆盖报告中的全部入选文献（跨模块复用同一篇），并非处理全部候选。四个模块每个最多6篇，因此最多24篇；增加篇数会增加模型调用。
 4. 手动运行 Weekly Literature Digest，检查生成的 `digest_日期.md` 是否有中文摘要、中文总结、研究问题、方法与数据、主要发现、评论与待核实问题及证据范围。配置了 SMTP 时该手动运行也会发邮件。
 5. 仅预览、不发邮件时，可本地运行 `python literature_digest_agent.py --config config.labor_development_econ.json --output-dir outputs_preview`，运行前在本地设置密钥。
@@ -195,3 +195,14 @@ python3 literature_digest_agent.py --config config.labor_development_econ.json -
 当前改动提供逐篇总结和评论；跨论文的本周主题综述尚未自动生成。若要达到历史 `_zh_review.md` 中的综合综述效果，可在逐篇 review 完成后增加一次综合调用，输入入选论文编号和中文内容，要求每条综合判断引用论文编号。
 
 离线验证：`python -m unittest -v test_chinese_reviews`。测试使用模拟响应，不调用真实 API，也不发送邮件。
+
+
+## DeepSeek 模型配置
+
+当前使用 `https://api.deepseek.com/chat/completions`，默认 `deepseek-flash`，非流式调用，开启思考模式，`reasoning_effort=high`，与提供的官方示例一致。程序沿用标准库 HTTP 请求，无需安装 OpenAI SDK；`thinking` 直接放在请求 JSON 中（SDK 示例的 `extra_body` 会合并到这一层）。只将最终 `message.content` 写入周报，不写入 `reasoning_content`。
+
+GitHub Actions 必须添加 Repository secret `DEEPSEEK_API_KEY`；可选添加 Repository variable `DEEPSEEK_MODEL` 覆盖模型。旧的 `OPENAI_API_KEY` / `OPENAI_MODEL` 不再使用。密钥只在 GitHub Secrets 或本地环境中配置，不能写入 JSON、Python 文件或提交仓库。本地定时脚本也已改为读取 DeepSeek 环境变量。
+
+`llm.thinking` 可设为 `disabled`；关闭思考时才发送 `temperature`。`llm.timeout` 默认300秒，是单次网络请求超时；网络失败沿用最多3次尝试。中文字段校验、全量入选文献 review 和失败阻止发送仍然保留。
+
+接口参考：https://api-docs.deepseek.com/zh-cn/ ，https://api-docs.deepseek.com/zh-cn/guides/thinking_mode/

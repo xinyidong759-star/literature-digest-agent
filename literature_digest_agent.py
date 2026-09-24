@@ -22,7 +22,7 @@ from xml.etree import ElementTree
 OPENALEX_WORKS_URL = "https://api.openalex.org/works"
 UNPAYWALL_URL = "https://api.unpaywall.org/v2/{doi}"
 REPEC_BASE_URL = "https://ideas.repec.org"
-OPENAI_CHAT_COMPLETIONS_URL = "https://api.openai.com/v1/chat/completions"
+DEEPSEEK_CHAT_COMPLETIONS_URL = "https://api.deepseek.com/chat/completions"
 
 
 def load_config(path):
@@ -543,9 +543,12 @@ def llm_config(config):
     return {
         "enabled": bool(raw.get("enabled", False)),
         "required": bool(raw.get("required", False)),
-        "model": os.environ.get("OPENAI_MODEL") or raw.get("model", "gpt-4o-mini"),
+        "model": os.environ.get("DEEPSEEK_MODEL") or raw.get("model", "deepseek-flash"),
         "max_reviews": int(raw.get("max_reviews", config.get("max_items_in_report", 8))),
         "temperature": float(raw.get("temperature", 0.2)),
+        "thinking": raw.get("thinking", "enabled"),
+        "reasoning_effort": raw.get("reasoning_effort", "high"),
+        "timeout": int(raw.get("timeout", 300)),
     }
 
 
@@ -575,13 +578,14 @@ def paper_review_prompt(paper, topic_name):
 
 
 def generate_llm_review(paper, config):
-    api_key = os.environ.get("OPENAI_API_KEY")
+    api_key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
     if not api_key:
-        return ""
+        raise RuntimeError("DEEPSEEK_API_KEY is not set.")
     options = llm_config(config)
     payload = {
         "model": options["model"],
-        "temperature": options["temperature"],
+        "stream": False,
+        "thinking": {"type": options["thinking"]},
         "messages": [
             {
                 "role": "system",
@@ -590,11 +594,19 @@ def generate_llm_review(paper, config):
             {"role": "user", "content": paper_review_prompt(paper, config.get("topic_name", "Literature Digest"))},
         ],
     }
+    if options["thinking"] not in {"enabled", "disabled"}:
+        raise ValueError("llm.thinking must be enabled or disabled.")
+    if options["reasoning_effort"] not in {"low", "high", "max"}:
+        raise ValueError("llm.reasoning_effort must be low, high or max.")
+    if options["thinking"] == "enabled":
+        payload["reasoning_effort"] = options["reasoning_effort"]
+    else:
+        payload["temperature"] = options["temperature"]
     data = http_post_json(
-        OPENAI_CHAT_COMPLETIONS_URL,
+        DEEPSEEK_CHAT_COMPLETIONS_URL,
         payload,
         headers={"Authorization": f"Bearer {api_key}"},
-        timeout=90,
+        timeout=options["timeout"],
     )
     choices = data.get("choices") or []
     if not choices or choices[0].get("finish_reason") != "stop":
@@ -652,10 +664,10 @@ def add_llm_reviews(config, papers):
     targets = collect_review_targets(config, papers)
     if not targets:
         return
-    if not os.environ.get("OPENAI_API_KEY", "").strip():
+    if not os.environ.get("DEEPSEEK_API_KEY", "").strip():
         if llm_config(config)["required"]:
-            raise RuntimeError("Chinese reviews require OPENAI_API_KEY. Configure the GitHub Actions secret or local environment.")
-        print("Warning: llm.enabled is true but OPENAI_API_KEY is not set; skipping LLM reviews.", file=sys.stderr)
+            raise RuntimeError("Chinese reviews require DEEPSEEK_API_KEY. Configure the GitHub Actions secret or local environment.")
+        print("Warning: llm.enabled is true but DEEPSEEK_API_KEY is not set; skipping LLM reviews.", file=sys.stderr)
         return
     failures = 0
     for i, paper in enumerate(targets, 1):
@@ -996,8 +1008,8 @@ def run_subscribers(subscribers_path, default_config_path, default_output_dir, s
 
 def run(config, output_dir):
     options = llm_config(config)
-    if options["required"] and (not options["enabled"] or not os.environ.get("OPENAI_API_KEY", "").strip()):
-        raise RuntimeError("Chinese reviews require llm.enabled=true and OPENAI_API_KEY before searching.")
+    if options["required"] and (not options["enabled"] or not os.environ.get("DEEPSEEK_API_KEY", "").strip()):
+        raise RuntimeError("Chinese reviews require llm.enabled=true and DEEPSEEK_API_KEY before searching.")
     today = dt.date.today()
     from_days = int(config.get("from_days", 7))
     from_date = (today - dt.timedelta(days=from_days)).isoformat()

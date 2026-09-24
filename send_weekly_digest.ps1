@@ -21,8 +21,8 @@ foreach ($name in @(
     "SMTP_USE_TLS",
     "SMTP_USE_SSL",
     "DIGEST_EMAIL_TO",
-    "OPENAI_API_KEY",
-    "OPENAI_MODEL"
+    "DEEPSEEK_API_KEY",
+    "DEEPSEEK_MODEL"
 )) {
     $value = (Get-ItemProperty -Path $envPath -Name $name -ErrorAction SilentlyContinue).$name
     if ($value) {

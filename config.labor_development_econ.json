@@ -293,7 +293,10 @@
   "llm": {
     "enabled": true,
     "required": true,
-    "model": "gpt-4o-mini",
+    "model": "deepseek-flash",
+    "thinking": "enabled",
+    "reasoning_effort": "high",
+    "timeout": 300,
     "max_reviews": 0,
     "temperature": 0.2
   },
