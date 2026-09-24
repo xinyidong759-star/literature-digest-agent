@@ -1008,8 +1008,15 @@ def run_subscribers(subscribers_path, default_config_path, default_output_dir, s
 
 def run(config, output_dir):
     options = llm_config(config)
-    if options["required"] and (not options["enabled"] or not os.environ.get("DEEPSEEK_API_KEY", "").strip()):
-        raise RuntimeError("Chinese reviews require llm.enabled=true and DEEPSEEK_API_KEY before searching.")
+    if options["required"] and not options["enabled"]:
+        raise RuntimeError("Chinese reviews are required but llm.enabled is disabled. Enable it in the selected config file.")
+    if options["required"] and not os.environ.get("DEEPSEEK_API_KEY", "").strip():
+        raise RuntimeError(
+            "DEEPSEEK_API_KEY is missing or blank. In GitHub, add a repository Actions secret "
+            "named DEEPSEEK_API_KEY under Settings > Secrets and variables > Actions > Secrets "
+            "(not Variables). Ensure the workflow maps secrets.DEEPSEEK_API_KEY to this environment variable. "
+            "For local runs, set DEEPSEEK_API_KEY in the process environment."
+        )
     today = dt.date.today()
     from_days = int(config.get("from_days", 7))
     from_date = (today - dt.timedelta(days=from_days)).isoformat()
