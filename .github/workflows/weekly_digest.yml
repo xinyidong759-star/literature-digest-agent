@@ -11,8 +11,8 @@ jobs:
   digest:
     runs-on: ubuntu-latest
     env:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      DEEPSEEK_MODEL: ${{ vars.DEEPSEEK_MODEL }}
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
       SMTP_PORT: ${{ secrets.SMTP_PORT }}
       SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
@@ -30,6 +30,13 @@ jobs:
         run: python -m pip install -r requirements.txt
       - name: Test Chinese review pipeline
         run: python -m unittest -v test_chinese_reviews
+      - name: Check DeepSeek secret
+        shell: bash
+        run: |
+          if [[ -z "${DEEPSEEK_API_KEY//[[:space:]]/}" ]]; then
+            echo "::error::DEEPSEEK_API_KEY is missing or blank. Add a repository secret in Settings > Secrets and variables > Actions > Secrets (not Variables), then start a new workflow run."
+            exit 1
+          fi
       - name: Generate digest
         run: |
           if [ -f subscribers.json ]; then
