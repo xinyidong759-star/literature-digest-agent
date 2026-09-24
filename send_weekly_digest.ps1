@@ -1,7 +1,8 @@
 param(
     [string]$ProjectDir = "",
     [string]$Config = "config.labor_development_econ.json",
-    [string]$OutputDir = "outputs_auto"
+    [string]$OutputDir = "outputs_auto",
+    [string]$PythonExe = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -37,6 +38,31 @@ $logPath = Join-Path $logDir "weekly_digest_$stamp.log"
 $stdoutPath = Join-Path $logDir "weekly_digest_$stamp.out.log"
 $stderrPath = Join-Path $logDir "weekly_digest_$stamp.err.log"
 
+if (-not $PythonExe) {
+    $candidates = @(
+        "C:\Users\32887\AppData\Local\Python\bin\python.exe",
+        "C:\Users\32887\AppData\Local\Programs\Python\Python312\python.exe",
+        "C:\Users\32887\AppData\Local\Programs\Python\Python311\python.exe",
+        "python"
+    )
+    foreach ($candidate in $candidates) {
+        if ($candidate -eq "python") {
+            $command = Get-Command python -ErrorAction SilentlyContinue
+            if ($command) {
+                $PythonExe = $command.Source
+                break
+            }
+        } elseif (Test-Path -LiteralPath $candidate) {
+            $PythonExe = $candidate
+            break
+        }
+    }
+}
+
+if (-not $PythonExe) {
+    throw "Python executable not found. Set -PythonExe to a valid python.exe path."
+}
+
 $pythonArgs = @(
     "literature_digest_agent.py",
     "--config",
@@ -47,7 +73,7 @@ $pythonArgs = @(
 )
 
 $process = Start-Process `
-    -FilePath "python" `
+    -FilePath $PythonExe `
     -ArgumentList $pythonArgs `
     -WorkingDirectory $ProjectDir `
     -RedirectStandardOutput $stdoutPath `

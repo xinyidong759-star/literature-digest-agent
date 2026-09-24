@@ -39,7 +39,8 @@ python3 literature_digest_agent.py --config config.labor_development_econ.json -
 "llm": {
   "enabled": true,
   "model": "gpt-4o-mini",
-  "max_reviews": 12,
+  "required": true,
+  "max_reviews": 0,
   "temperature": 0.2
 }
 ```
@@ -148,7 +149,7 @@ python3 literature_digest_agent.py --config config.labor_development_econ.json -
 
 在 GitHub 仓库的 `Settings -> Secrets and variables -> Actions` 中添加这些 secrets：
 
-- `OPENAI_API_KEY`：可选；不填则跳过 LLM review，只保留摘要速览
+- `OPENAI_API_KEY`：内置劳动/发展经济学配置必填；缺失会停止运行，避免发送没有中文内容的邮件。其他配置仅当 `llm.required=false` 时允许跳过。
 - `SMTP_HOST`
 - `SMTP_PORT`
 - `SMTP_USERNAME`
@@ -175,3 +176,22 @@ python3 literature_digest_agent.py --config config.labor_development_econ.json -
 - Zotero API key 和目标 library/collection
 - 邮件发送方式，例如 Gmail、Outlook、SMTP、SendGrid
 - 是否有一台长期运行的服务器，或者是否接受 GitHub Actions 定时运行
+
+
+## 中文摘要、总结与评论的上线步骤
+
+1. 将更新后的 `literature_digest_agent.py`、`config.labor_development_econ.json`、测试文件和 workflow 上传到 GitHub 仓库。
+2. 在仓库 Settings → Secrets and variables → Actions 中添加 Repository secret `OPENAI_API_KEY`。本地 Windows 环境变量不会自动同步到 GitHub；不要将密钥写入配置或代码。
+3. 保持经济学配置 `llm.enabled=true`、`llm.required=true`、`llm.max_reviews=0`。这里 0 表示覆盖报告中的全部入选文献（跨模块复用同一篇），并非处理全部候选。四个模块每个最多6篇，因此最多24篇；增加篇数会增加模型调用。
+4. 手动运行 Weekly Literature Digest，检查生成的 `digest_日期.md` 是否有中文摘要、中文总结、研究问题、方法与数据、主要发现、评论与待核实问题及证据范围。配置了 SMTP 时该手动运行也会发邮件。
+5. 仅预览、不发邮件时，可本地运行 `python literature_digest_agent.py --config config.labor_development_econ.json --output-dir outputs_preview`，运行前在本地设置密钥。
+
+中文摘要要求完整忠实翻译；中文总结提炼贡献；评论仅依据摘要提出判断和待核实问题，不代表已阅读全文。缺摘要时明确写“摘要信息不足”。模型输出仍需人工抽查数字、否定词、因果表述和评论依据。
+
+新生成的中文内容保存在 JSON 的 `llm_review` 字段和正式 `digest_日期.md` 中，原始摘要仍保存在 `abstract`。既有 `_zh_review.md` 是独立文件，当前流程不自动读取它们。`output_language=zh` 本身不触发翻译。
+
+严格模式下缺少密钥、生成失败、返回空内容/截断内容或缺少中文字段时停止本次报告生成，因而不会进入正常发送步骤。`llm.required=false` 可恢复允许英文降级的旧行为。此检查用于新生成报告，手动 `--email-report` 仍直接发送指定文件。
+
+当前改动提供逐篇总结和评论；跨论文的本周主题综述尚未自动生成。若要达到历史 `_zh_review.md` 中的综合综述效果，可在逐篇 review 完成后增加一次综合调用，输入入选论文编号和中文内容，要求每条综合判断引用论文编号。
+
+离线验证：`python -m unittest -v test_chinese_reviews`。测试使用模拟响应，不调用真实 API，也不发送邮件。

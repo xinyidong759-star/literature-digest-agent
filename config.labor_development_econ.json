@@ -292,8 +292,9 @@
   "unpaywall_email": "",
   "llm": {
     "enabled": true,
+    "required": true,
     "model": "gpt-4o-mini",
-    "max_reviews": 12,
+    "max_reviews": 0,
     "temperature": 0.2
   },
   "email": {
